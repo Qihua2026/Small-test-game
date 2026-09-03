@@ -1,0 +1,12 @@
+{
+  "name": "zhenhuan-personality-quiz",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/app.js && node --check src/data.js && node --check src/quiz-engine.js",
+    "build": "node scripts/build.js"
+  }
+}
