@@ -5,7 +5,37 @@ const app = document.querySelector('#app');
 const toast = document.querySelector('#toast');
 const STORAGE_KEY = `xiaozhu_quiz_${quizConfig.quizVersion}`;
 const RESULT_KEY = `xiaozhu_result_${quizConfig.algorithmVersion}`;
+const ACCESS_TOKEN_KEY = 'xiaozhu_access_token';
+const CLIENT_ID_KEY = 'xiaozhu_client_id';
 const state = loadState();
+state.access = 'checking';
+
+function clientId() {
+  let value = localStorage.getItem(CLIENT_ID_KEY);
+  if (!value) {
+    value = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    localStorage.setItem(CLIENT_ID_KEY, value);
+  }
+  return value;
+}
+
+async function api(path, payload) {
+  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(new Error(data.reason || 'REQUEST_FAILED'), { reason: data.reason });
+  return data;
+}
+
+async function verifyAccess() {
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (!token) { state.access = 'inactive'; render(); return; }
+  try {
+    const result = await api('/api/access/status', { token, clientId: clientId() });
+    state.access = result.active ? 'active' : 'inactive';
+    if (!result.active) localStorage.removeItem(ACCESS_TOKEN_KEY);
+  } catch { state.access = 'unavailable'; }
+  render();
+}
 
 function loadState() {
   try {
@@ -37,13 +67,14 @@ function shell(content, className = '') {
 
 function renderHome() {
   const hasProgress = Object.keys(state.answers).length > 0 && Object.keys(state.answers).length < quizConfig.questions.length;
+  const hasAccess = state.access === 'active';
   app.innerHTML = shell(`<section class="home-layout">
     <div class="home-copy reveal">
       <p class="eyebrow"><span></span> 一纸性情鉴 · 仅供娱乐</p>
       <h1>若入宫局<br><em>你是哪位小主？</em></h1>
       <p class="lede">十二道现代处境题，照见你在关系与选择中的<br class="desktop-only">本命人格、隐藏人格与高压人格。</p>
       <div class="home-actions">
-        <button class="button button--primary" data-action="start">${hasProgress ? '继续你的性情鉴' : '入宫测一测'} <span>→</span></button>
+        ${hasAccess ? `<div class="access-granted"><span>✓</span><p><strong>性情签已激活</strong><small>本设备 30 天内可重复进入</small></p></div><button class="button button--primary" data-action="start">${hasProgress ? '继续你的性情鉴' : '开始测试'} <span>→</span></button>` : `<form class="activation-form" id="activation-form"><label for="activation-code">输入购买后收到的激活码</label><div><input id="activation-code" name="code" inputmode="text" autocomplete="one-time-code" placeholder="XQ-XXXX-XXXX-XXXX" maxlength="17" ${state.access === 'checking' ? 'disabled' : ''}><button class="button button--primary" type="submit" ${state.access === 'checking' ? 'disabled' : ''}>${state.access === 'checking' ? '正在确认…' : '解锁测试'} <span>→</span></button></div><p class="activation-message" aria-live="polite">${state.access === 'unavailable' ? '暂时无法连接激活服务，请稍后重试。' : '一枚激活码限一台设备使用，激活后 30 天内有效。'}</p></form>`}
         <button class="text-button" data-action="how">先看看怎么玩</button>
       </div>
       <div class="meta-row"><span>拾贰道题</span><i></i><span>约贰分钟</span><i></i><span>无需登录</span></div>
@@ -191,7 +222,10 @@ app.addEventListener('click', event => {
     return;
   }
   const action = event.target.closest('[data-action]')?.dataset.action;
-  if (action === 'start') { state.index = Math.min(Object.keys(state.answers).length, 11); setPage('quiz'); }
+  if (action === 'start') {
+    if (state.access !== 'active') { notify('请先输入激活码解锁测试'); return; }
+    state.index = Math.min(Object.keys(state.answers).length, 11); setPage('quiz');
+  }
   if (action === 'how') showModal();
   if (action === 'back') { if (state.index === 0) setPage('home'); else { state.index -= 1; saveState(); renderQuiz(); } }
   if (action === 'exit') setPage('home');
@@ -199,4 +233,32 @@ app.addEventListener('click', event => {
   if (action === 'share') shareResult();
 });
 
+app.addEventListener('submit', async event => {
+  if (event.target.id !== 'activation-form') return;
+  event.preventDefault();
+  const form = event.target;
+  const input = form.elements.code;
+  const button = form.querySelector('button');
+  const message = form.querySelector('.activation-message');
+  const code = input.value.trim();
+  if (!code) { message.textContent = '请输入订单消息中的激活码。'; input.focus(); return; }
+  button.disabled = true; input.disabled = true; button.firstChild.textContent = '正在激活… ';
+  try {
+    const result = await api('/api/activate', { code, clientId: clientId() });
+    localStorage.setItem(ACCESS_TOKEN_KEY, result.token);
+    state.access = 'active'; render(); notify('激活成功，可以开始测试了');
+  } catch (error) {
+    const copy = {
+      INVALID_CODE: '没有找到这个激活码，请检查后重试。',
+      ALREADY_USED: '这个激活码已绑定其他设备，请联系卖家处理。',
+      EXPIRED: '这个激活码已过期，请联系卖家处理。',
+      REVOKED: '这个激活码已停用，请联系卖家处理。',
+      TOO_MANY_ATTEMPTS: '尝试次数过多，请 10 分钟后再试。'
+    };
+    message.textContent = copy[error.reason] || '暂时无法激活，请检查网络后重试。';
+    button.disabled = false; input.disabled = false; button.firstChild.textContent = '解锁测试 ';
+  }
+});
+
 render();
+verifyAccess();

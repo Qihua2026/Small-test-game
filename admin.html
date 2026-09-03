@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>性情鉴 · 激活码管理</title>
+  <link rel="stylesheet" href="./src/admin.css">
+</head>
+<body>
+  <main>
+    <header><div><p>SELLER CONSOLE</p><h1>激活码管理</h1></div><span>一纸性情鉴</span></header>
+    <section class="auth card" id="auth"><label for="secret">管理密钥</label><div><input id="secret" type="password" autocomplete="current-password" placeholder="输入 ADMIN_SECRET"><button data-action="login">进入后台</button></div><small>密钥只保存在当前浏览器会话，关闭页面后自动清除。</small></section>
+    <div id="workspace" hidden>
+      <section class="metrics"><article><small>未使用</small><strong id="unused">—</strong></article><article><small>已激活</small><strong id="active">—</strong></article><article><small>已停用</small><strong id="revoked">—</strong></article></section>
+      <section class="grid">
+        <form class="card" id="generate-form"><p>GENERATE</p><h2>生成一批激活码</h2><label>批次名称<input name="batchId" value="xiaohongshu-batch"></label><label>订单号（选填，一行一个）<textarea name="orders" rows="6" placeholder="不填写则按生成数量创建空白码"></textarea></label><label>生成数量<input name="count" type="number" min="1" max="500" value="10"></label><button type="submit">生成激活码</button><small>明文只显示一次，请生成后立即下载。</small></form>
+        <section class="card"><p>DELIVERY</p><h2>本次生成结果</h2><div id="generated" class="empty">尚未生成激活码</div><button id="download" data-action="download" hidden>下载 CSV</button></section>
+      </section>
+      <section class="card records"><div class="records-head"><div><p>RECORDS</p><h2>激活记录</h2></div><div><input id="query" placeholder="搜索订单、批次或末四位"><button data-action="search">搜索</button></div></div><div class="table-wrap"><table><thead><tr><th>末四位</th><th>订单号</th><th>批次</th><th>状态</th><th>激活时间</th><th>操作</th></tr></thead><tbody id="records"></tbody></table></div></section>
+    </div>
+    <div id="notice" role="status" aria-live="polite"></div>
+  </main>
+  <script type="module" src="./src/admin.js"></script>
+</body>
+</html>
