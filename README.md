@@ -2,6 +2,8 @@
 
 一款以 12 道现代生活选择题测量“后宫生存人格”的轻量 Web 小游戏。测试使用 8 维人格向量与 10 位角色进行匹配，生成本命人格、隐藏人格和高压人格结果。
 
+换电脑继续开发或了解当前云端状态，请先阅读 [`PROJECT_HANDOFF.md`](./PROJECT_HANDOFF.md)。该文档汇总了已确定的产品决策、Git 流程、CloudBase 配置、安全原则和后续路线。
+
 ## 本地运行
 
 需要 Node.js 18 或更高版本。
@@ -36,9 +38,20 @@ npm run codes:generate -- 10 xiaohongshu-order-batch
 
 卖家后台位于 `http://localhost:4173/admin.html`。本地默认管理密钥为 `development-admin`，也可通过 `ADMIN_SECRET` 环境变量覆盖。后台支持关联小红书订单号、下载本批 CSV、查询状态、停用激活码和为换机用户重置设备。
 
-## Cloudflare 部署准备
+## 生产部署：腾讯云 CloudBase
 
-生产方案使用 Cloudflare Pages Functions + D1：
+面向中国大陆用户的生产方案使用 CloudBase 静态网站托管 + Web 云函数 + 文档型数据库：
+
+- `cloudbase/functions/activation-api/`：激活、访问校验和卖家后台 API
+- `cloudbase/DATABASE.md`：数据库集合、索引和权限配置
+- `cloudbase/DEPLOYMENT.md`：从测试环境到正式环境的部署步骤
+- `cloudbaserc.json`：CloudBase CLI 配置模板
+
+部署前运行 `TCB_ENV_ID='环境ID' npm run cloudbase:preflight`，部署后运行 `BASE_URL='环境网址' npm run cloudbase:smoke`。生产环境必须使用独立密钥与自定义域名。
+
+## Cloudflare 备选实现
+
+仓库保留 Cloudflare Pages Functions + D1 实现作为海外部署备选：
 
 - `functions/api/activate.js`：校验激活码并绑定首台设备
 - `functions/api/access/status.js`：检查 30 天访问凭证与停用状态
@@ -56,7 +69,8 @@ npm run codes:generate -- 10 xiaohongshu-order-batch
 - `src/styles.css`：Editorial × 东方宫廷视觉系统
 - `tests/`：算法自动化测试
 - `admin.html`：卖家激活码后台
-- `functions/`：Cloudflare Pages Functions 生产接口
+- `functions/`：Cloudflare Pages Functions 备选接口
+- `cloudbase/`：CloudBase 生产部署代码与手册
 - `server/`：本地开发用激活服务
 - `甄嬛传小主性格测试_PRD.md`：完整产品需求文档
 

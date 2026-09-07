@@ -61,7 +61,7 @@ function shell(content, className = '') {
     <div class="grain" aria-hidden="true"></div>
     <div class="corner-mark corner-mark--top" aria-hidden="true">性<br>情</div>
     ${content}
-    <footer class="site-footer"><span>一纸性情鉴 · ${quizConfig.quizVersion}</span><span>仅供娱乐，不构成专业心理评估</span></footer>
+    <footer class="site-footer"><span>一纸性情鉴 · ${quizConfig.quizVersion}</span></footer>
   </main>`;
 }
 
@@ -70,14 +70,12 @@ function renderHome() {
   const hasAccess = state.access === 'active';
   app.innerHTML = shell(`<section class="home-layout">
     <div class="home-copy reveal">
-      <p class="eyebrow"><span></span> 一纸性情鉴 · 仅供娱乐</p>
+      <p class="eyebrow"><span></span> 一纸性情鉴</p>
       <h1>若入宫局<br><em>你是哪位小主？</em></h1>
       <p class="lede">十二道现代处境题，照见你在关系与选择中的<br class="desktop-only">本命人格、隐藏人格与高压人格。</p>
       <div class="home-actions">
         ${hasAccess ? `<div class="access-granted"><span>✓</span><p><strong>性情签已激活</strong><small>本设备 30 天内可重复进入</small></p></div><button class="button button--primary" data-action="start">${hasProgress ? '继续你的性情鉴' : '开始测试'} <span>→</span></button>` : `<form class="activation-form" id="activation-form"><label for="activation-code">输入购买后收到的激活码</label><div><input id="activation-code" name="code" inputmode="text" autocomplete="one-time-code" placeholder="XQ-XXXX-XXXX-XXXX" maxlength="17" ${state.access === 'checking' ? 'disabled' : ''}><button class="button button--primary" type="submit" ${state.access === 'checking' ? 'disabled' : ''}>${state.access === 'checking' ? '正在确认…' : '解锁测试'} <span>→</span></button></div><p class="activation-message" aria-live="polite">${state.access === 'unavailable' ? '暂时无法连接激活服务，请稍后重试。' : '一枚激活码限一台设备使用，激活后 30 天内有效。'}</p></form>`}
-        <button class="text-button" data-action="how">先看看怎么玩</button>
       </div>
-      <div class="meta-row"><span>拾贰道题</span><i></i><span>约贰分钟</span><i></i><span>无需登录</span></div>
     </div>
     <div class="hero-art reveal reveal--delay" aria-hidden="true">
       <div class="moon"></div><div class="fan fan--1"></div><div class="fan fan--2"></div>
@@ -176,16 +174,6 @@ function renderResult() {
   </section>`, 'result-page');
 }
 
-function showModal() {
-  const dialog = document.createElement('dialog');
-  dialog.className = 'modal';
-  dialog.innerHTML = `<button class="modal-close" aria-label="关闭">×</button><p class="eyebrow">玩法说明</p><h2>无需揣测角色，<br>只需选择真实的你。</h2><ol><li><span>01</span>完成 12 道现代生活处境题</li><li><span>02</span>从 8 个维度生成你的性情向量</li><li><span>03</span>匹配本命、隐藏与高压人格</li></ol><p class="modal-note">测试仅供娱乐，不构成专业心理评估。</p>`;
-  document.body.append(dialog); dialog.showModal();
-  const close = () => { dialog.close(); dialog.remove(); };
-  dialog.querySelector('.modal-close').onclick = close;
-  dialog.onclick = event => { if (event.target === dialog) close(); };
-}
-
 function shareResult() {
   const role = quizConfig.roles.find(item => item.id === state.result?.primary);
   const text = `我的本命人格是「${role?.name || '小主'}」——${role?.quote || ''}`;
@@ -226,7 +214,6 @@ app.addEventListener('click', event => {
     if (state.access !== 'active') { notify('请先输入激活码解锁测试'); return; }
     state.index = Math.min(Object.keys(state.answers).length, 11); setPage('quiz');
   }
-  if (action === 'how') showModal();
   if (action === 'back') { if (state.index === 0) setPage('home'); else { state.index -= 1; saveState(); renderQuiz(); } }
   if (action === 'exit') setPage('home');
   if (action === 'restart') { state.answers = {}; state.index = 0; state.sessionId = crypto.randomUUID?.() || String(Date.now()); setPage('quiz'); }

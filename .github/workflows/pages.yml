@@ -1,8 +1,6 @@
-name: Deploy static demo to GitHub Pages
+name: Legacy GitHub Pages demo (manual only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

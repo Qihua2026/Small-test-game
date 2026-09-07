@@ -1,0 +1,62 @@
+name: Deploy to Tencent CloudBase
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment containing CloudBase secrets
+        required: true
+        type: choice
+        options:
+          - development
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudbase-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify and build
+        run: |
+          npm run check
+          npm test
+          npm run build
+
+      - name: Install CloudBase CLI
+        run: npm install --global @cloudbase/cli@latest
+
+      - name: Login to CloudBase
+        run: tcb login --apiKeyId "$TCB_SECRET_ID" --apiKey "$TCB_SECRET_KEY"
+        env:
+          TCB_SECRET_ID: ${{ secrets.TCB_SECRET_ID }}
+          TCB_SECRET_KEY: ${{ secrets.TCB_SECRET_KEY }}
+
+      - name: Deploy activation API
+        run: tcb fn deploy activation-api --httpFn --yes -e "$TCB_ENV_ID"
+        env:
+          TCB_ENV_ID: ${{ secrets.TCB_ENV_ID }}
+
+      - name: Deploy static site safely
+        run: tcb hosting deploy ./dist / -e "$TCB_ENV_ID" --safe --verify
+        env:
+          TCB_ENV_ID: ${{ secrets.TCB_ENV_ID }}
+
+      - name: Verify public health endpoint
+        run: BASE_URL="$BASE_URL" npm run cloudbase:smoke
+        env:
+          BASE_URL: ${{ vars.BASE_URL }}
