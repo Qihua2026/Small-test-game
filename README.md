@@ -4,6 +4,8 @@
 
 换电脑继续开发或了解当前云端状态，请先阅读 [`PROJECT_HANDOFF.md`](./PROJECT_HANDOFF.md)。该文档汇总了已确定的产品决策、Git 流程、CloudBase 配置、安全原则和后续路线。
 
+结果页角色插画的已确认风格、首批示例和后续生成规范记录在 [`CHARACTER_ART_GUIDE.md`](./CHARACTER_ART_GUIDE.md)。
+
 ## 本地运行
 
 需要 Node.js 18 或更高版本。
