@@ -7,7 +7,10 @@
     "dev": "node scripts/dev-server.js",
     "codes:generate": "node scripts/generate-codes.js",
     "test": "node --test tests/*.test.js",
-    "check": "node --check src/app.js && node --check src/admin.js && node --check src/data.js && node --check src/quiz-engine.js && node --check server/activation-store.js && node --check scripts/dev-server.js && node --check functions/_lib/activation.js && node --check functions/api/activate.js && node --check functions/api/access/status.js && node --check functions/api/admin/codes.js",
-    "build": "node scripts/build.js"
+    "check": "node --check src/app.js && node --check src/admin.js && node --check src/data.js && node --check src/quiz-engine.js && node --check server/activation-store.js && node --check scripts/dev-server.js && node --check functions/_lib/activation.js && node --check functions/api/activate.js && node --check functions/api/access/status.js && node --check functions/api/admin/codes.js && node --check cloudbase/functions/activation-api/index.js && node --check cloudbase/functions/activation-api/lib/security.js && node --check scripts/cloudbase-preflight.js",
+    "build": "node scripts/build.js",
+    "cloudbase:preflight": "npm run build && node scripts/cloudbase-preflight.js",
+    "cloudbase:smoke": "node scripts/cloudbase-smoke-test.js",
+    "cloudbase:secrets": "node scripts/generate-cloudbase-secrets.js"
   }
 }

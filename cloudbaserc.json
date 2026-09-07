@@ -1,0 +1,22 @@
+{
+  "envId": "small-test-free-d3fb6hemd80568ee",
+  "functionRoot": "./cloudbase/functions",
+  "functions": [
+    {
+      "name": "activation-api",
+      "type": "HTTP",
+      "runtime": "Nodejs20.19",
+      "memorySize": 256,
+      "timeout": 10,
+      "installDependency": true
+    }
+  ],
+  "app": {
+    "serviceName": "small-test-game",
+    "framework": "static",
+    "installCommand": "",
+    "buildCommand": "npm run build",
+    "outputDir": "./dist",
+    "deployPath": "/"
+  }
+}
